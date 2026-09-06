@@ -5,7 +5,7 @@ fs.mkdirSync(profileDir, {recursive:true});
 const ctx = await firefox.launchPersistentContext(profileDir, {headless:false});
 const page = await ctx.newPage();
 await page.goto("https://x.com/login", {waitUntil:"domcontentloaded"});
-console.log("Firefox opened. Log into @theitsupportguru there. Press Enter in this terminal when done, or wait 5 min for auto-save...");
+console.log("Firefox opened. Log into @theitsupprtguru there. Press Enter in this terminal when done, or wait 5 min for auto-save...");
 await new Promise(r=>{
   let done=false;
   process.stdin.once("data",()=>{ if(!done){ done=true; r(); }});
@@ -17,3 +17,4 @@ console.log(`Saved ${cookies.length} cookies to out/x-cookies.json`);
 const b64 = Buffer.from(JSON.stringify(cookies)).toString("base64");
 console.log(`\n=== X_COOKIES_B64 (paste this) ===\n${b64}\n=== end ===\nRun:\ngh secret set X_COOKIES_B64 --repo ArtDgr/theitsupportguru-x --body "${b64.slice(0,30)}..."\nOr: echo "${b64}" | gh secret set X_COOKIES_B64 --repo ArtDgr/theitsupportguru-x`);
 await ctx.close();
+

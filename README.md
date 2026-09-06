@@ -1,6 +1,6 @@
 # The IT Support Guru — Headless X Publisher (Faceless, No Buffer)
 
-Automated X pipeline for `@theitsupportguru` — 4×/day Mon-Fri faceless headless, **same logic as Instagram** (`FacelessStudio/src/x-*`) but via **Substack-style Python headless stack** (no Buffer, no browser).
+Automated X pipeline for `@theitsupprtguru` — 4×/day Mon-Fri faceless headless, **same logic as Instagram** (`FacelessStudio/src/x-*`) but via **Substack-style Python headless stack** (no Buffer, no browser).
 
 ## Stack (mirrors `theitsupportguru-substack`)
 - **No Buffer.** Ayrshare free API (`AYRSHARE_API_KEY`, 20/mo) posts to X from GitHub Actions. Same free-runner model as Substack's Email-to-Post (whitelisted, no fingerprint).
@@ -42,3 +42,4 @@ Automated X pipeline for `@theitsupportguru` — 4×/day Mon-Fri faceless headle
 Buffer free = 10 queued + API limits, and X via Buffer still needs Professional IG link. Ayrshare free = 20/mo, 1 key, no channel Professional gate, whitelisted IP (GitHub runner) — same as Substack's whitelisted Email secret.
 
 Verify: `python -m py_compile src/*.py`
+
