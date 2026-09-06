@@ -1,0 +1,24 @@
+{
+  "name": "theitsupportguru-x",
+  "version": "1.0.0",
+  "description": "Automated X pipeline for `@theitsupprtguru` — 4×/day Mon-Fri faceless headless, **same logic as Instagram** (`FacelessStudio/src/x-*`) but via **Substack-style Python headless stack** (no Buffer, no browser).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArtDgr/theitsupportguru-x.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ArtDgr/theitsupportguru-x/issues"
+  },
+  "homepage": "https://github.com/ArtDgr/theitsupportguru-x#readme",
+  "dependencies": {
+    "playwright": "^1.63.0"
+  }
+}
