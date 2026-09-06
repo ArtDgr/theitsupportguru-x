@@ -18,8 +18,14 @@ def ingest():
     items = []
     seen = set()
     sources = []
-    for cat in ["windows_platform","cybersecurity","ai_applied","infra_specialist"]:
+    # X uses 7 IG niches (ai, gadgets, apple, hardware, security, it-support, cloud-devops) plus legacy substack keys
+    for cat in ["ai","gadgets","apple","hardware","security","it-support","cloud-devops","windows_platform","cybersecurity","ai_applied","infra_specialist"]:
         sources.extend(cfg.get(cat,[]))
+    # fallback: if no known cat, ingest all list values
+    if not sources:
+        for v in cfg.values():
+            if isinstance(v, list):
+                sources.extend(v)
     print(f"Ingesting {len(sources)} feeds (AEST {datetime.now(AEST).isoformat()})")
     for s in sources:
         url = s["url"]

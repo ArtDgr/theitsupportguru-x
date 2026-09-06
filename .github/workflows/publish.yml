@@ -1,9 +1,9 @@
-name: publish-theitsupportguru
+name: publish-x-theitsupportguru
 
 on:
   schedule:
-    # Daily 04:00 AEST = 18:00 UTC prior day - random gate decides publish (max 12/mo, 06:12-09:47 window)
-    - cron: '0 18 * * *'
+    # Daily 05:30 AEST = 19:30 UTC prior day -> single build synthesizes 4 tweets, Ayrshare schedules 06:00/12:00/17:00/20:00 AEST
+    - cron: '30 19 * * 1-5'
   workflow_dispatch:
     inputs:
       force:
@@ -14,7 +14,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,14 +22,14 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - run: pip install -r requirements.txt
-      - name: AEST Random Gate (max 12/mo, IT admin focus)
+      - name: AEST Random Gate (max 80/mo, stealth 30% effective)
         env:
           FORCE_PUBLISH: ${{ inputs.force }}
         run: python src/schedule_gate.py
-      - name: Ingest RSS
+      - name: Ingest RSS (7 niches, 48 feeds, mirrors FacelessStudio)
         if: hashFiles('out/skip_gate') == ''
         run: python src/ingest.py
-      - name: Score relevance (IT admin/enterprise bias)
+      - name: Score relevance (X IT admin + tech enthusiast bias)
         if: hashFiles('out/skip_gate') == ''
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -41,41 +41,32 @@ jobs:
         env:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
         run: python src/enrich.py
-      - name: Synthesize draft (Neutral Analyst, AEST)
+      - name: Synthesize X drafts (4 pillars, 280-char, same logic as IG)
         if: hashFiles('out/skip_gate') == ''
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python src/synthesize.py
-      - name: QA grounded check
+      - name: QA grounded check (280-char, hashtag, CVE gate)
         if: hashFiles('out/skip_gate') == ''
         run: python src/qa.py
-      - name: Publish (AEST jitter 06:12-09:47 + Telegram gate)
+      - name: Publish X via Ayrshare (AEST jitter 06:12-06:27 + Telegram gate)
         if: hashFiles('out/skip_gate') == ''
         env:
-          SUBSTACK_EMAIL: ${{ secrets.SUBSTACK_EMAIL }}
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          AYRSHARE_API_KEY: ${{ secrets.AYRSHARE_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           AUTO_PUBLISH: ${{ secrets.AUTO_PUBLISH }}
-          BUFFER_TOKEN: ${{ secrets.BUFFER_TOKEN }}
-          BUFFER_PROFILE_IDS: ${{ secrets.BUFFER_PROFILE_IDS }}
-          AYRSHARE_API_KEY: ${{ secrets.AYRSHARE_API_KEY }}
-          AYRSHARE_PLATFORMS: ${{ secrets.AYRSHARE_PLATFORMS }}
-          METRICOOL_MCP_ENABLED: ${{ secrets.METRICOOL_MCP_ENABLED }}
           CI: "1"
         run: python src/publish.py
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: draft-${{ github.run_id }}
+          name: x-draft-${{ github.run_id }}
           path: |
             out/
             drafts/
             out/schedule.json
+            out/tweets.json

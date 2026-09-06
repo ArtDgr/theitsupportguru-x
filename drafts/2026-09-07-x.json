@@ -1,0 +1,38 @@
+[
+  {
+    "slot": 0,
+    "pillar": "redflag",
+    "niche": "ai",
+    "text": "🚩 Mamdani imposes one-year ban on AI for most NYC students - Reuters — silent risk. Why & fix inside. #AI #ChatGPT",
+    "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxQc3pZYVc0QVRhMWllSnUwZHJsNDlzd1ZhWXZOTmpHVXZwcXU3T2FtTUl0b0ZrLTdFLVNJdmRNYjdUalY5cnVSV1VjZU82SlpPTkdqRS0zSENzd3N1dl9rcEpzSVpfeC12cVp6V21TSDJwYmdmVmEtVXNOdkMtb0F6QXIzZ3d4eDVEekxHMkZ3UHI0WGphSVFrcDd3UWE?oc=5",
+    "title": "Mamdani imposes one-year ban on AI for most NYC students - Reuters",
+    "score": 7.0
+  },
+  {
+    "slot": 1,
+    "pillar": "myth",
+    "niche": "hardware",
+    "text": "🛑 Myth: Uber to lay off 10% of staff in biggest cuts since COVID -…\nTruth: Check the thread — it’s not what you think. #hardware #PC",
+    "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQelprYTZqU1R2cFNKc2lqX0NZdGFxR0tyVjI0OGRUNFJHSHJJSkkzWmlfNGY0cXc2ZmpZaUc2X3RHZ3h5eEx1U2xZdkRBOHJQZnpRMVJYckhhUUVqZVd0Q3FWczl0dVNycmxiUGxuT3lqcWZVdkpLeW1jaG5rV0lNeTU0RzVYNVZKQTNRLWxXbE9CMkplR2xQaTlzZEJOaUU0MVMyanZZaUIwY0o3OHc?oc=5",
+    "title": "Uber to lay off 10% of staff in biggest cuts since COVID - Reuters",
+    "score": 7.0
+  },
+  {
+    "slot": 2,
+    "pillar": "secrets",
+    "niche": "gadgets",
+    "text": "🔓 Google escapes ad tech breakup in third Big Tech antitrust loss for… — IT pro shortcut you’ll wish you knew sooner. #gadgets #smartphone",
+    "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPYzZjU0NTeE1iWXZnaFIwQ3owdlFBWTM4NnZNZ25ncjI0VngydVFCc2ZLOS1PalpFLTNBdjNkTkpyNDNIYTFXd1JQMURDbnFadXB1T2s4eFNENXpxQk9BcVFWdUNvRTBwVFh4NEwzaGd4S3NmbDJYZVVyeGlseTVXWktpa2tDWmpTZllyYmVOQ2FIaVEzSVlacA?oc=5",
+    "title": "Google escapes ad tech breakup in third Big Tech antitrust loss for US - Reuters",
+    "score": 7.0
+  },
+  {
+    "slot": 3,
+    "pillar": "guide",
+    "niche": "security",
+    "text": "🛠️ US urges hands-off approach to AI regulation at G20 tech meeting -… — 4-step fix you can do now. #cybersecurity #infosec",
+    "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPbmFFcTlLcU1BTjFTOXBjTE80ZGFzSUc5ZUtPREdXX2tDcTJZODd4UTNwekU1M3JFdXlZdUhPcFl6Z0RqcWhjQ3VvLW92cmtZMHlLY0ZmTktxNlUtVXJLRlFfTXhWWXpvbGRBTU1Vb0FEY0dVNWE1Y3VNZTJ5SVhoU19hU0lsU0xmUnpoSkJrMVY5T1ZIaHlzTHRBS2JRTjdRU0U0R0tB?oc=5",
+    "title": "US urges hands-off approach to AI regulation at G20 tech meeting - Reuters",
+    "score": 7.0
+  }
+]

@@ -1,101 +1,150 @@
-# theitsupportguru-substack/config/sources.yaml
-# 38 high-signal sources weighted for MSP/Helpdesk + Sysadmin/Entra + Enthusiast
-# weight 3=core, 2=support, 1=gap-filler
+# theitsupportguru-x/config/sources.yaml
+# 7 IG niches -> 48 high-signal feeds, weighted for X daily 4-post pillars
+# Mirrors FacelessStudio config.json niches but in Substack YAML shape for ingest.py
+# weight 3=core, 2=support, 1=gap-filler  |  pillar maps to X pillar rotation
+# pillars: redflag, myth, secrets, guide, news (news uses top-scored across all)
 
-windows_platform:
-  - url: https://techcommunity.microsoft.com/plugins/custom/microsoft/o365/custom-blog-rss?tid=1600206513787 # Windows IT Pro
+ai:
+  - url: https://news.google.com/rss/search?q=site:reuters.com%20technology&hl=en-US&gl=US&ceid=US:en
     weight: 3
-    pillar: patch
-  - url: https://blogs.windows.com/feed/
+    pillar: news
+  - url: https://techcrunch.com/feed/
     weight: 3
-    pillar: patch
-  - url: https://techcommunity.microsoft.com/ghr/api/BlogRss?blogId=16e4b90d-d2c3-4133-b4e9-3861bd8599cd # Intune
+    pillar: news
+  - url: https://www.zdnet.com/news/rss.xml
     weight: 3
-    pillar: patch
-  - url: https://learn.microsoft.com/en-us/entra/feed
-    weight: 3
-    pillar: patch
-  - url: https://msrc.microsoft.com/blog/rss
-    weight: 3
-    pillar: patch
-  - url: https://support.microsoft.com/en-us/feed
+    pillar: news
+  - url: https://feeds.twit.tv/twit.xml
     weight: 2
-    pillar: patch
-  - url: https://www.askwoody.com/feed/
+    pillar: lab
+  - url: https://www.wired.com/feed/rss
     weight: 2
-    pillar: patch
+    pillar: lab
+  - url: https://www.theverge.com/rss/index.xml
+    weight: 2
+    pillar: news
 
-cybersecurity:
-  - url: https://www.cisa.gov/known-exploited-vulnerabilities-catalog/rss.xml # CISA KEV
+gadgets:
+  - url: https://www.gsmarena.com/rss-news-reviews.php3
+    weight: 3
+    pillar: news
+  - url: https://www.androidcentral.com/rss.xml
+    weight: 2
+    pillar: news
+  - url: https://9to5google.com/feed/
+    weight: 2
+    pillar: news
+  - url: https://www.androidauthority.com/feed/
+    weight: 2
+    pillar: news
+  - url: https://www.theverge.com/rss/mobile/index.xml
+    weight: 2
+    pillar: news
+  - url: https://www.engadget.com/rss.xml
+    weight: 2
+    pillar: news
+  - url: https://www.xda-developers.com/feed/
+    weight: 1
+    pillar: lab
+  - url: https://www.androidheadlines.com/feed
+    weight: 1
+    pillar: news
+
+apple:
+  - url: https://feeds.macrumors.com/MacRumors-All
+    weight: 3
+    pillar: news
+  - url: https://9to5mac.com/feed/
+    weight: 3
+    pillar: news
+  - url: https://appleinsider.com/rss/news
+    weight: 2
+    pillar: news
+
+hardware:
+  - url: https://news.google.com/rss/search?q=site:notebookcheck.net&hl=en-US&gl=US&ceid=US:en
+    weight: 3
+    pillar: news
+  - url: https://www.tomshardware.com/feeds/all
+    weight: 3
+    pillar: guide
+  - url: https://www.techradar.com/rss
+    weight: 2
+    pillar: news
+  - url: https://feeds.arstechnica.com/arstechnica/gadgets
+    weight: 2
+    pillar: lab
+  - url: https://www.phoronix.com/rss.php
+    weight: 1
+    pillar: lab
+
+security:
+  - url: https://krebsonsecurity.com/feed/
+    weight: 3
+    pillar: threat
+  - url: https://thehackernews.com/feeds/posts/default
     weight: 3
     pillar: threat
   - url: https://www.bleepingcomputer.com/feed/
     weight: 3
     pillar: threat
-  - url: https://krebsonsecurity.com/feed/
-    weight: 3
-    pillar: threat
-  - url: https://feeds.feedburner.com/TheHackersNews
-    weight: 2
-    pillar: threat
   - url: https://www.darkreading.com/rss.xml
     weight: 2
     pillar: threat
-  - url: https://unit42.paloaltonetworks.com/feed/
-    weight: 2
-    pillar: threat
-  - url: https://www.proofpoint.com/us/rss.xml
-    weight: 1
-    pillar: threat
-  - url: https://www.cisa.gov/uscert/ncas/alerts.xml
+  - url: https://www.cisa.gov/known-exploited-vulnerabilities-catalog/rss.xml
     weight: 2
     pillar: threat
 
-ai_applied:
-  - url: https://simonwillison.net/atom/everything/
+it-support:
+  - url: https://www.windowscentral.com/rss.xml
     weight: 3
-    pillar: lab
-  - url: https://blogs.microsoft.com/ai/feed/
+    pillar: guide
+  - url: https://www.ghacks.net/feed/
     weight: 3
-    pillar: lab
-  - url: https://openai.com/blog/rss.xml
+    pillar: guide
+  - url: https://www.computerworld.com/index.rss
+    weight: 2
+    pillar: news
+  - url: https://4sysops.com/feed/
     weight: 2
     pillar: lab
-  - url: https://www.anthropic.com/rss.xml
-    weight: 2
-    pillar: lab
-  - url: https://huggingface.co/blog/feed.xml
+  - url: https://superuser.com/feeds
+    weight: 1
+    pillar: guide
+  - url: https://www.spiceworks.com/feed/
     weight: 1
     pillar: lab
-  - url: https://arxiv.org/rss/cs.AI
-    weight: 1
-    pillar: lab
-  - url: https://arxiv.org/rss/cs.CR
-    weight: 2
-    pillar: threat
 
-infra_specialist:
-  - url: https://www.semianalysis.com/feed
-    weight: 2
-    pillar: lab
+cloud-devops:
   - url: https://www.theregister.com/headlines.atom
+    weight: 3
+    pillar: news
+  - url: https://www.servethehome.com/feed/
+    weight: 3
+    pillar: lab
+  - url: https://blog.cloudflare.com/rss/
     weight: 2
-    pillar: all
-  - url: https://techcommunity.microsoft.com/ghr/api/BlogRss?blogId=53bc62c3-1dc6-4d48-9d8e-0eafe6c5a40f # Azure
+    pillar: lab
+  - url: https://aws.amazon.com/blogs/aws/feed/
     weight: 2
-    pillar: patch
-  - url: https://aws.amazon.com/blogs/security/feed/
+    pillar: lab
+  - url: https://www.networkworld.com/feed
     weight: 1
-    pillar: threat
-  - url: https://cloud.google.com/blog/rss/
+    pillar: news
+  - url: https://packetpushers.net/feed/
     weight: 1
     pillar: lab
-  - url: https://www.lawfaremedia.org/rss.xml # regulation
+  - url: https://sourceforge.net/blog/feed/
     weight: 1
-    pillar: threat
+    pillar: lab
 
-# Scoring threshold per pillar
+# Scoring thresholds per X pillar (X is broader tech than Substack enterprise - keep permissive)
 thresholds:
-  patch: 7.0
-  threat: 7.0
-  lab: 6.5
+  redflag: 5.0
+  myth: 5.0
+  secrets: 5.0
+  guide: 5.0
+  news: 5.5
+  threat: 5.0
+  lab: 5.0
+  all: 5.0
