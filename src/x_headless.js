@@ -27,8 +27,26 @@ async function run({dry=false}={}){
   if(dry){ console.log("[x-headless] dry-run, not posting"); return; }
   const profileDir = process.env.X_PROFILE_DIR || "profiles/x-playwright";
   fs.mkdirSync(profileDir,{recursive:true});
+  // Inject X_COOKIES_B64 if provided (GitHub Actions)
+  if(process.env.X_COOKIES_B64){
+    try{
+      const j = JSON.parse(Buffer.from(process.env.X_COOKIES_B64, "base64").toString("utf8"));
+      fs.mkdirSync(profileDir, {recursive:true});
+      // will be loaded via addCookies after launch
+      globalThis._xCookies = j;
+      console.log(`[x-headless] loaded ${j.length} cookies from X_COOKIES_B64`);
+    }catch(e){ console.log("X_COOKIES_B64 parse fail: "+e.message); }
+  } else if(fs.existsSync("/tmp/x-cookies.json")){
+    try{
+      globalThis._xCookies = JSON.parse(fs.readFileSync("/tmp/x-cookies.json","utf8"));
+      console.log(`[x-headless] loaded cookies from /tmp/x-cookies.json`);
+    }catch{}
+  }
   const browser = await firefox.launchPersistentContext(profileDir, {headless: true, viewport:{width:1280,height:800}});
   const page = await browser.newPage();
+  if(globalThis._xCookies){
+    try{ await browser.addCookies(globalThis._xCookies); console.log("[x-headless] cookies injected"); }catch(e){ console.log("cookie inject fail: "+e.message); }
+  }
   try{
     await page.goto("https://x.com/home", {waitUntil:"domcontentloaded", timeout:40000});
     await page.waitForTimeout(2500);
