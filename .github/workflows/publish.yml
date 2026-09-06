@@ -1,6 +1,6 @@
 name: publish-x-theitsupportguru
 
-on:
+"on":
   schedule:
     # Daily 05:30 AEST = 19:30 UTC prior day -> single build synthesizes 4 tweets, Ayrshare schedules 06:00/12:00/17:00/20:00 AEST
     - cron: '30 19 * * 1-5'
