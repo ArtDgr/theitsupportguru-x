@@ -139,6 +139,23 @@ def publish_via_ayrshare(tweets):
         times.append(FRIDAY_EXTRA)
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    # Free tier check: scheduleDate requires Premium/Business; for free, publish 1 tweet immediately per run
+    # Detect current AEST slot to pick single tweet (avoids 4-at-once spam on free)
+    now_hm = datetime.now(AEST).strftime("%H:%M")
+    # Map current time to nearest posting slot
+    def nearest_slot(hm):
+        try:
+            cur = int(hm.replace(":",""))
+            times_int = [int(t.replace(":","")) for t in POSTING_TIMES]
+            # pick slot whose time <= cur < next, else last
+            for i, t in enumerate(times_int):
+                nxt = times_int[i+1] if i+1 < len(times_int) else 2400
+                if t <= cur < nxt:
+                    return i
+            return len(times_int)-1
+        except: return 0
+    free_mode_single = False
+
     published = 0
     for idx, tweet in enumerate(tweets[:len(times)]):
         hm = times[idx] if idx < len(times) else POSTING_TIMES[idx % len(POSTING_TIMES)]
@@ -168,7 +185,37 @@ def publish_via_ayrshare(tweets):
                 print(f"  -> OK {r.status_code} id={data.get('id') or data.get('postIds')}")
                 published += 1
             else:
-                print(f"  -> FAIL {r.status_code}: {data}")
+                # Free plan: scheduleDate requires Premium -> retry immediate publish (free tier, single tweet per run)
+                if data.get("code") == 169 or "Premium" in str(data.get("message","")) or "Business Plan" in str(data.get("message","")):
+                    print(f"  -> Schedule requires paid (code 169) -> retry immediate publish (free tier)")
+                    # Free: publish only 1 tweet matching current slot immediately (avoid 4-at-once)
+                    if not free_mode_single:
+                        free_mode_single = True
+                        # pick tweet for current slot
+                        slot_idx = nearest_slot(now_hm)
+                        tweet_single = tweets[slot_idx % len(tweets)] if tweets else tweet
+                        text_single = tweet_single.get("text","")[:280]
+                        link_single = tweet_single.get("link","")
+                        if link_single and link_single not in text_single and len(text_single)+1+len(link_single) <= 280:
+                            text_single = f"{text_single} {link_single}"
+                        payload_immediate = {"post": text_single, "platforms": ["twitter"]}
+                        if tweet_single.get("mediaUrls"):
+                            payload_immediate["mediaUrls"] = tweet_single["mediaUrls"][:4]
+                        print(f"  -> Free tier: publishing single slot {tweet_single.get('slot',slot_idx)} @ now {now_hm} AEST -> {text_single[:60]}...")
+                        r2 = requests.post("https://api.ayrshare.com/api/post", headers=headers, json=payload_immediate, timeout=20)
+                        data2 = r2.json() if r2.headers.get("content-type","").startswith("application/json") else {"status": r2.text[:200]}
+                        if r2.status_code in (200, 201) and data2.get("status") != "error":
+                            print(f"  -> OK immediate {r2.status_code} id={data2.get('id') or data2.get('postIds')}")
+                            published += 1
+                        else:
+                            print(f"  -> FAIL immediate {r2.status_code}: {data2}")
+                        # Free tier: only 1 post per run, break after first retry
+                        break
+                    else:
+                        print(f"  -> Skipping remaining scheduled slots (free tier single per run)")
+                        break
+                else:
+                    print(f"  -> FAIL {r.status_code}: {data}")
                 # don't abort all, continue
             time.sleep(1.5)  # polite between posts
         except Exception as e:
