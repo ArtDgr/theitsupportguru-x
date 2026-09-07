@@ -15,8 +15,9 @@ console.log("If Edge was open, it is now closed. Launching with your real profil
 await new Promise(r=>setTimeout(r,2000));
 const ctx = await chromium.launchPersistentContext(edgeUserData, {
   channel: "msedge",
-  headless: false,
-  args: ["--disable-blink-features=AutomationControlled"]
+  headless: true,
+  args: ["--disable-blink-features=AutomationControlled"],
+  ignoreDefaultArgs: ["--no-sandbox"]
 });
 const cookies = await ctx.cookies("https://x.com");
 console.log(`Found ${cookies.length} cookies for x.com`);
