@@ -11,8 +11,8 @@ if(!fs.existsSync(edgeUserData)) {
   process.exit(1);
 }
 // Close Edge first if open, or it will lock
-console.log("Close Edge completely (all windows) before this runs, then press Enter...");
-await new Promise(r=>{ process.stdin.once("data",()=>r()); });
+console.log("If Edge was open, it is now closed. Launching with your real profile in 2 sec...");
+await new Promise(r=>setTimeout(r,2000));
 const ctx = await chromium.launchPersistentContext(edgeUserData, {
   channel: "msedge",
   headless: false,
