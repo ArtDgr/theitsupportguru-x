@@ -27,10 +27,10 @@ def check_monthly_cap():
     if STATE.exists():
         try: state = json.loads(STATE.read_text())
         except: state = {}
-    # X is 4x/day Mon-Fri -> ~80/mo, but cap at 80 to avoid spam
+    # X Month 1: 40/mo = 10/week cap to stay under X bot radar, warm-up
     count = state.get(f"published_{yyyymm}", 0)
-    if count >= 80:
-        print(f"[CAP] SKIP - max 80 reached for {yyyymm} ({count}/80) AEST")
+    if count >= 40:
+        print(f"[CAP] SKIP - max 40 reached for {yyyymm} ({count}/40) AEST — warm-up cap")
         return False
     return True
 
@@ -174,15 +174,14 @@ def publish_via_ayrshare(tweets):
         except: return 0
     free_mode_single = False
 
-    # Randomize daily count 2-4 (like IG Knuth 30%): not always 4, defeats fixed-count bot flag
-    # For free-tier immediate (1 per run), this still randomizes which slot is chosen via nearest_slot + jitter
+    # Month 1 warm-up: 40/mo = 10/week => avg 2 per publishing day, random 1-2 per run for free tier
+    # Randomize daily pool 2-3 (not 2-4) to keep 10/week, still defeats fixed-count flag
     daily_seed = int(datetime.now(AEST).strftime("%Y%m%d"))
-    rand_count = 2 + (hash(daily_seed) % 3)  # 2,3,4 deterministic per date but varies daily
-    if len(tweets) > rand_count and random.random() < 0.6:
-        # Shuffle and slice to rand_count (like IG shuffled manifest)
+    rand_count = 2 + (daily_seed * 2654435761 % 2)  # 2 or 3 deterministic per date
+    if len(tweets) > rand_count and random.random() < 0.7:
         tweets = sorted(tweets, key=lambda _: random.random())[:rand_count]
         times = times[:rand_count]
-        print(f"[RANDOM] Daily count {rand_count}/{len(tweets)+ (4-rand_count)} tweets today (free tier will pick 1 of these per run)")
+        print(f"[RANDOM] Warm-up 40/mo: daily pool {rand_count}/4 tweets today (free tier picks 1 per slot run → ~10/week)")
 
     published = 0
     for idx, tweet in enumerate(tweets[:len(times)]):

@@ -18,26 +18,26 @@ def should_publish(randomize=True):
         except: state = {}
     month_key = f"published_{yyyymm}"
     count = state.get(month_key, 0)
-    if count >= 80:
-        print(f"[GATE] SKIP - monthly cap 80 reached ({count}/80) for {yyyymm} AEST")
+    if count >= 40:
+        print(f"[GATE] SKIP - monthly cap 40 reached ({count}/40) for {yyyymm} AEST — warm-up 10/week")
         return False, f"cap-{yyyymm}"
     if not randomize:
         return True, "dispatch"
-    # X is daily Mon-Fri 4x -> ~80/mo max. Gate is per-day build (not per-tweet).
-    # Weights: Mon-Fri high, Sat lower, Sun skip (like IG schedule Mon-Sat but X Mon-Fri)
-    weights = {0:0.75, 1:0.80, 2:0.70, 3:0.80, 4:0.75, 5:0.25, 6:0.10}
-    p = weights.get(day, 0.35)
-    # Beat detection: add Knuth hash 30% stealth (like IG buffer) + per-run ±0.07 jitter, so X sees no fixed pattern
-    knuth = ((int(now.strftime("%Y%m%d")) * 2654435761) % 100) / 100  # 0-0.99 deterministic per date
-    p = p * (0.85 + knuth*0.30)  # 0.85-1.15x weekday weight, deterministic but looks random
-    p += random.uniform(-0.07, 0.07)  # extra 14% run-to-run jitter
-    p = max(0.10, min(0.95, p))
+    # Warm-up Month 1: 10/week = 40/mo. Gate is per-slot run (4x/day Mon-Fri) -> need p~0.36 to hit 10/week (4*5*0.36=7.2) + catch-up to 10
+    # Lower weights vs 80/mo to stay under X radar in month 1
+    weights = {0:0.50, 1:0.55, 2:0.40, 3:0.55, 4:0.50, 5:0.15, 6:0.05}
+    p = weights.get(day, 0.30)
+    # Beat detection: Knuth hash + per-run jitter, so X sees no fixed pattern (like IG 30%)
+    knuth = ((int(now.strftime("%Y%m%d%H")) * 2654435761) % 100) / 100  # per-hour deterministic
+    p = p * (0.85 + knuth*0.30)
+    p += random.uniform(-0.07, 0.07)
+    p = max(0.10, min(0.85, p))
     days_left = 30 - now.day
-    expected = 80 * (now.day / 30)
-    if count < expected - 5 and days_left > 0:
-        p = min(0.90, p + 0.20)
-    elif count > expected + 5:
-        p = max(0.15, p - 0.15)
+    expected = 40 * (now.day / 30)
+    if count < expected - 3 and days_left > 0:
+        p = min(0.75, p + 0.15)
+    elif count > expected + 3:
+        p = max(0.10, p - 0.15)
     roll = random.random()
     will = roll < p
     print(f"[GATE] X Day {now.strftime('%a %Y-%m-%d %H:%M AEST')} p={p:.2f} roll={roll:.3f} -> {'PUBLISH' if will else 'SKIP'} ({count}/80 {yyyymm})")
