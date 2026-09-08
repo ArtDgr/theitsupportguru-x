@@ -27,9 +27,11 @@ def should_publish(randomize=True):
     # Weights: Mon-Fri high, Sat lower, Sun skip (like IG schedule Mon-Sat but X Mon-Fri)
     weights = {0:0.75, 1:0.80, 2:0.70, 3:0.80, 4:0.75, 5:0.25, 6:0.10}
     p = weights.get(day, 0.35)
-    # Stealth: 30% daily run like IG buffer-publish hash -> adapt as random gate
-    # but with weekday boost, effective ~50% Mon-Fri ~ 80*0.5=40 tweets? capped 80 so fine.
-    # Random gate also has stealth variance: 2-4 posts per build in synthesize fallback randomizes.
+    # Beat detection: add Knuth hash 30% stealth (like IG buffer) + per-run ±0.07 jitter, so X sees no fixed pattern
+    knuth = ((int(now.strftime("%Y%m%d")) * 2654435761) % 100) / 100  # 0-0.99 deterministic per date
+    p = p * (0.85 + knuth*0.30)  # 0.85-1.15x weekday weight, deterministic but looks random
+    p += random.uniform(-0.07, 0.07)  # extra 14% run-to-run jitter
+    p = max(0.10, min(0.95, p))
     days_left = 30 - now.day
     expected = 80 * (now.day / 30)
     if count < expected - 5 and days_left > 0:

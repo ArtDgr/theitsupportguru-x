@@ -48,30 +48,48 @@ def record_publish(n=4):
     STATE.write_text(json.dumps(state, indent=2))
 
 def aest_jitter_sleep():
+    # Anti-bot: per-run jitter + per-tweet jitter (Substack 06:12-06:27 bias) + run-to-run 0-59s variance
     is_cron = os.environ.get("GITHUB_EVENT_NAME") == "schedule"
     is_ci = os.environ.get("CI") == "1"
     if is_cron and is_ci:
+        # Cron 05:30 build -> jitter to 06:12-06:27 window + 0-59s, bias 06 (65% 06-07) like Substack
         j_hour = random.randint(2, 5)
         j_min = random.randint(12, 27)
         j_sec = random.randint(0, 59)
+        j_ms = random.randint(0, 999)
         if random.random() < 0.65:
             j_hour = random.randint(2, 3)
-        sleep_s = j_hour*3600 + j_min*60 + j_sec
-        # For X daily build 05:30 -> jitter to 06:12-06:27 is handled in workflow sleep; here cap to 2m for publish
+        sleep_s = j_hour*3600 + j_min*60 + j_sec + j_ms/1000
         aest_target = datetime.now(AEST) + timedelta(seconds=sleep_s)
-        print(f"[AEST] Cron jitter: sleeping {sleep_s}s -> target {aest_target.strftime('%H:%M:%S %a %d %b AEST')} (06:12-06:27 bias)")
+        print(f"[AEST] Cron jitter: sleeping {sleep_s:.3f}s -> target {aest_target.strftime('%H:%M:%S.%f')[:-3]} {aest_target.strftime('%a %d %b AEST')} (06:12-06:27 bias, ms variance)")
         if os.environ.get("SKIP_SLEEP") != "1":
             time.sleep(sleep_s)
         return aest_target
     else:
+        # Dispatch: 12-27s + 0-999ms + 0.5-1.5s human pause variance
         j_sec = random.randint(12, 27)
         j_ms = random.randint(0, 999)
-        sleep_s = j_sec
+        j_extra = random.uniform(0.5, 1.5)
+        sleep_s = j_sec + j_ms/1000 + j_extra
         aest_target = datetime.now(AEST) + timedelta(seconds=sleep_s)
-        print(f"[AEST] Dispatch jitter: sleeping {sleep_s}.{j_ms:03d}s -> target {aest_target.strftime('%H:%M:%S AEST')}")
+        print(f"[AEST] Dispatch jitter: sleeping {sleep_s:.3f}s -> target {aest_target.strftime('%H:%M:%S.%f')[:-3]} AEST (12-27s + ms + human)")
         if os.environ.get("SKIP_SLEEP") != "1":
             time.sleep(sleep_s)
         return aest_target
+
+def per_tweet_jitter(hm):
+    # Per-slot jitter: each of 06:00/12:00/17:00/20:00 gets +12-27 min + 0-59s random, so X sees no fixed minute
+    base_h, base_m = map(int, hm.split(":"))
+    j_min = random.randint(12, 27)
+    j_sec = random.randint(0, 59)
+    # 65% bias to earlier 12-17 min, 35% later 22-27 (drift)
+    if random.random() < 0.65:
+        j_min = random.randint(12, 17)
+    total = base_h*60 + base_m + j_min
+    # Wrap if >23:59
+    total %= 24*60
+    new_h, new_m = divmod(total, 60)
+    return f"{new_h:02d}:{new_m:02d}", j_sec
 
 def load_tweets():
     if TWEETS_JSON.exists():
@@ -156,11 +174,22 @@ def publish_via_ayrshare(tweets):
         except: return 0
     free_mode_single = False
 
+    # Randomize daily count 2-4 (like IG Knuth 30%): not always 4, defeats fixed-count bot flag
+    # For free-tier immediate (1 per run), this still randomizes which slot is chosen via nearest_slot + jitter
+    daily_seed = int(datetime.now(AEST).strftime("%Y%m%d"))
+    rand_count = 2 + (hash(daily_seed) % 3)  # 2,3,4 deterministic per date but varies daily
+    if len(tweets) > rand_count and random.random() < 0.6:
+        # Shuffle and slice to rand_count (like IG shuffled manifest)
+        tweets = sorted(tweets, key=lambda _: random.random())[:rand_count]
+        times = times[:rand_count]
+        print(f"[RANDOM] Daily count {rand_count}/{len(tweets)+ (4-rand_count)} tweets today (free tier will pick 1 of these per run)")
+
     published = 0
     for idx, tweet in enumerate(tweets[:len(times)]):
-        hm = times[idx] if idx < len(times) else POSTING_TIMES[idx % len(POSTING_TIMES)]
-        # Ayrshare scheduleDate expects ISO UTC
-        aest_dt = datetime.strptime(f"{today} {hm}", "%Y-%m-%d %H:%M").replace(tzinfo=AEST)
+        hm_raw = times[idx] if idx < len(times) else POSTING_TIMES[idx % len(POSTING_TIMES)]
+        hm, j_sec = per_tweet_jitter(hm_raw)
+        # Ayrshare scheduleDate expects ISO UTC (with jitter)
+        aest_dt = datetime.strptime(f"{today} {hm}", "%Y-%m-%d %H:%M").replace(tzinfo=AEST) + timedelta(seconds=j_sec)
         utc_iso = aest_dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
         text = tweet.get("text", "")[:280]
         link = tweet.get("link", "")
@@ -177,7 +206,10 @@ def publish_via_ayrshare(tweets):
         if tweet.get("mediaUrls"):
             payload["mediaUrls"] = tweet["mediaUrls"][:4]
 
-        print(f"[AYRSHARE] Publishing slot {tweet.get('slot',idx)} @ {hm} AEST ({utc_iso}) -> {text[:60]}...")
+        # Random User-Agent per post (anti-bot, like Substack)
+        ua = f"TheITSupprtGuru-X/1.0 ({datetime.now(AEST).strftime('%Y%m%d')}-{random.randint(100,999)})"
+        headers["User-Agent"] = ua
+        print(f"[AYRSHARE] Publishing slot {tweet.get('slot',idx)} @ {hm} AEST ({utc_iso}) UA:{ua} -> {text[:60]}...")
         try:
             r = requests.post("https://api.ayrshare.com/api/post", headers=headers, json=payload, timeout=20)
             data = r.json() if r.headers.get("content-type","").startswith("application/json") else {"status": r.text[:200]}
@@ -217,7 +249,7 @@ def publish_via_ayrshare(tweets):
                 else:
                     print(f"  -> FAIL {r.status_code}: {data}")
                 # don't abort all, continue
-            time.sleep(1.5)  # polite between posts
+            time.sleep(random.uniform(1.5, 3.5))  # human pause + variance
         except Exception as e:
             print(f"  -> exception: {e}")
 
