@@ -157,6 +157,17 @@ def publish_via_ayrshare(tweets):
         times.append(FRIDAY_EXTRA)
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    # X BYOK headers for Ayrshare (required for X posting since 2024, even on free tier) — use X_API_KEY/SECRET if set
+    x_api_key = os.environ.get("X_API_KEY")
+    x_api_secret = os.environ.get("X_API_SECRET")
+    if x_api_key and x_api_secret:
+        headers["X-Twitter-OAuth1-Api-Key"] = x_api_key
+        headers["X-Twitter-OAuth1-Api-Secret"] = x_api_secret
+        # Optional bearer for app-only (not needed for user post, but include if set)
+        x_bearer = os.environ.get("X_BEARER_TOKEN")
+        if x_bearer:
+            headers["X-Twitter-Bearer-Token"] = x_bearer
+        print(f"[X-BYOK] Using X Consumer Keys {x_api_key[:6]}... for Ayrshare")
     # Free tier check: scheduleDate requires Premium/Business; for free, publish 1 tweet immediately per run
     # Detect current AEST slot to pick single tweet (avoids 4-at-once spam on free)
     now_hm = datetime.now(AEST).strftime("%H:%M")
