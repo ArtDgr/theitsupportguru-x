@@ -45,7 +45,29 @@ async function run({dry=false}={}){
   const browser = await firefox.launchPersistentContext(profileDir, {headless: true, viewport:{width:1280,height:800}});
   const page = await browser.newPage();
   if(globalThis._xCookies){
-    try{ await browser.addCookies(globalThis._xCookies); console.log("[x-headless] cookies injected"); }catch(e){ console.log("cookie inject fail: "+e.message); }
+    try{
+      // Playwright expects url or domain+path, and expires in seconds. Firefox export has domain .x.com + expires 1819928583 (seconds) + sameSite None.
+      // Normalize to url for HttpOnly cookies and fix expires if needed.
+      const normalized = globalThis._xCookies.map(c=>{
+        let exp = c.expires;
+        if(exp && exp > 1e12) exp = Math.floor(exp/1000);
+        if(exp && exp < 0) exp = -1;
+        return {
+          name: c.name,
+          value: c.value,
+          domain: c.domain || ".x.com",
+          path: c.path || "/",
+          expires: exp ?? -1,
+          httpOnly: !!c.httpOnly,
+          secure: !!c.secure,
+          sameSite: (c.sameSite==="None" && c.secure) ? "None" : "Lax"
+        };
+      }).filter(c=>c.value);
+      // Try url-based injection for HttpOnly (more reliable than domain)
+      const withUrl = normalized.map(c=> ({...c, url: "https://x.com"}));
+      try{ await browser.addCookies(withUrl); console.log(`[x-headless] cookies injected via url (${withUrl.length})`); }
+      catch{ await browser.addCookies(normalized); console.log(`[x-headless] cookies injected via domain (${normalized.length})`); }
+    }catch(e){ console.log("cookie inject fail: "+e.message); }
   }
   try{
     await page.goto("https://x.com/home", {waitUntil:"domcontentloaded", timeout:40000});
