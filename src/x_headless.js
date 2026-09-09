@@ -27,31 +27,38 @@ async function run({dry=false}={}){
   if(dry){ console.log("[x-headless] dry-run, not posting"); return; }
   const profileDir = process.env.X_PROFILE_DIR || "profiles/x-playwright";
   fs.mkdirSync(profileDir,{recursive:true});
-  // Inject X_COOKIES_B64 if provided (GitHub Actions)
-  if(process.env.X_COOKIES_B64){
+  let storageStatePath = null;
+  let cookiesToInject = null;
+  if(process.env.X_STORAGE_B64){
+    try{
+      const state = JSON.parse(Buffer.from(process.env.X_STORAGE_B64, "base64").toString("utf8"));
+      storageStatePath = "/tmp/x-storage.json";
+      fs.writeFileSync(storageStatePath, JSON.stringify(state));
+      console.log(`[x-headless] storageState ready (${state.cookies.length} cookies, ${state.origins?.length||0} origins)`);
+    }catch(e){ console.log("X_STORAGE_B64 parse fail: "+e.message); }
+  } else if(process.env.X_COOKIES_B64){
     try{
       const j = JSON.parse(Buffer.from(process.env.X_COOKIES_B64, "base64").toString("utf8"));
-      fs.mkdirSync(profileDir, {recursive:true});
-      // will be loaded via addCookies after launch
-      globalThis._xCookies = j;
+      cookiesToInject = j;
       console.log(`[x-headless] loaded ${j.length} cookies from X_COOKIES_B64`);
     }catch(e){ console.log("X_COOKIES_B64 parse fail: "+e.message); }
   } else if(fs.existsSync("/tmp/x-cookies.json")){
     try{
-      globalThis._xCookies = JSON.parse(fs.readFileSync("/tmp/x-cookies.json","utf8"));
+      cookiesToInject = JSON.parse(fs.readFileSync("/tmp/x-cookies.json","utf8"));
       console.log(`[x-headless] loaded cookies from /tmp/x-cookies.json`);
     }catch{}
   }
-  const browser = await firefox.launchPersistentContext(profileDir, {headless: true, viewport:{width:1280,height:800}});
-  const page = await browser.newPage();
-  if(globalThis._xCookies){
+  const launchOpts = { headless: true, viewport:{width:1280,height:800} };
+  if(storageStatePath) launchOpts.storageState = storageStatePath;
+  const browser = await firefox.launchPersistentContext(profileDir, launchOpts);
+  const page = browser.pages()[0] || await browser.newPage();
+  if(!storageStatePath && cookiesToInject){
     try{
-      // Playwright expects url or domain+path, and expires in seconds. Firefox export has domain .x.com + expires 1819928583 (seconds) + sameSite None.
-      // Normalize to url for HttpOnly cookies and fix expires if needed.
-      const normalized = globalThis._xCookies.map(c=>{
+      const normalized = cookiesToInject.map(c=>{
         let exp = c.expires;
         if(exp && exp > 1e12) exp = Math.floor(exp/1000);
         if(exp && exp < 0) exp = -1;
+        // Fix Firefox host .x.com -> playwright expects domain .x.com is ok, but url is more reliable for HttpOnly
         return {
           name: c.name,
           value: c.value,
@@ -60,14 +67,17 @@ async function run({dry=false}={}){
           expires: exp ?? -1,
           httpOnly: !!c.httpOnly,
           secure: !!c.secure,
-          sameSite: (c.sameSite==="None" && c.secure) ? "None" : "Lax"
+          sameSite: (c.sameSite==="None" && c.secure) ? "None" : "Lax",
+          url: "https://x.com"
         };
       }).filter(c=>c.value);
-      // Try url-based injection for HttpOnly (more reliable than domain)
-      const withUrl = normalized.map(c=> ({...c, url: "https://x.com"}));
-      try{ await browser.addCookies(withUrl); console.log(`[x-headless] cookies injected via url (${withUrl.length})`); }
-      catch{ await browser.addCookies(normalized); console.log(`[x-headless] cookies injected via domain (${normalized.length})`); }
+      // Playwright addCookies wants either url or domain/path, but url takes precedence and handles HttpOnly
+      const forAdd = normalized.map(({url, ...rest}) => ({...rest, url}));
+      await browser.addCookies(forAdd);
+      console.log(`[x-headless] cookies injected via url (${forAdd.length})`);
     }catch(e){ console.log("cookie inject fail: "+e.message); }
+  } else if(storageStatePath){
+    console.log(`[x-headless] using storageState, no addCookies needed`);
   }
   try{
     await page.goto("https://x.com/home", {waitUntil:"domcontentloaded", timeout:40000});

@@ -75,6 +75,7 @@ jobs:
         if: hashFiles('out/skip_gate') == ''
         env:
           X_COOKIES_B64: ${{ secrets.X_COOKIES_B64 }}
+          X_STORAGE_B64: ${{ secrets.X_STORAGE_B64 }}
         run: |
           npm install --silent playwright 2>&1 | tail -n 5
           npx playwright install --with-deps firefox 2>&1 | tail -n 5
