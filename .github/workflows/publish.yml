@@ -58,6 +58,9 @@ jobs:
         if: hashFiles('out/skip_gate') == ''
         env:
           AYRSHARE_API_KEY: ${{ secrets.AYRSHARE_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           AUTO_PUBLISH: ${{ secrets.AUTO_PUBLISH }}
